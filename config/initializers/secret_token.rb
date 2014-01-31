@@ -9,4 +9,17 @@
 
 # Make sure your secret_key_base is kept private
 # if you're sharing your code publicly.
-Learningapp::Application.config.secret_key_base = '8a7d45ccf946d08c4004e590e87630cea2920632180b0ddd5164fa1eac30d84bff41729e4026981fffb4db49ff7de9975d780f09aa0de5ec74ae66e29aaa4922'
+def secure_token
+  token_file = Rails.root.join('.secret')
+  if File.exist?(token_file)
+    # Use the existing token.
+    File.read(token_file).chomp
+  else
+    # Generate a new token and store it in token_file.
+    token = SecureRandom.hex(64)
+    File.write(token_file, token)
+    token
+  end
+end
+
+Learningapp::Application.config.secret_key_base = secure_token
