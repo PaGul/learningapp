@@ -10,8 +10,9 @@ class UsersController < ApplicationController
   def create
     @user=User.new(user_params)
     if @user.save
+      sign_in @user
       flash[:success] = "Welcome to the Sample App!"
-      redirect_to user_path(@user) #можно просто riderect_to @user
+      redirect_to user_path(@user) #можно просто ridirect_to @user
     else 
       render 'new'
     end
@@ -21,6 +22,6 @@ class UsersController < ApplicationController
 
     def user_params
       params.require(:user).permit(:name, :email, :password,
-                                   :password_confirmation)
+                                   :password_confirmation) #ограничивает параметры на передачу, чтобы запретить например передачу админского поля
     end
 end
