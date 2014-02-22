@@ -1,0 +1,6 @@
+<% if @feed_items.any? %> <!-- партиал для создания окна фидов-->
+  <ol class="microposts">
+    <%= render partial: 'shared/feed_item', collection: @feed_items %> <!-- для рендеринга каждого элемента в коллекции. (Мы опустили параметр :partial в предыдущих рендерингах, используя запись, например, render ’shared/micropost’, но с :collection параметром этот синтаксис не работает -->
+  </ol>
+  <%= will_paginate @feed_items %> 
+<% end %> 

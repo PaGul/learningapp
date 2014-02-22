@@ -7,12 +7,12 @@ describe "Static pages" do
   subject {page}  #субъект тестирования
   
   shared_examples_for "Static standart headings" do
-    it {should have_selector('h1', text: heading)}
-    it {should have_title(full_title(heading))}
+    it { should have_selector('h1', text: heading) }
+    it { should have_title(full_title(heading)) }
   end
   
   describe "Home page" do #не использовал стандартный обработчик заголовков, т.к. пришлось бы вводить 2 отдельные переменные для заголовка и тайтла
-    before {visit root_path}
+    before { visit root_path }
     it {should have_content ('Home')}
     it {should have_title("#{btitle}")}
     it {should_not have_title("| Home")}
@@ -44,10 +44,26 @@ describe "Static pages" do
     let(:heading){'About Us'}
     it_should_behave_like "Static standart headings"
   end
+  
   describe "Contact" do
     before {visit contact_path}
     let(:heading){'Contact'}
     it_should_behave_like "Static standart headings"
+  end
+  
+  describe "for signed_in users" do
+    let(:user) { FactoryGirl.create(:user) }
+    before do
+      FactoryGirl.create(:micropost, user: user, content: "Lorem ipsum")
+      FactoryGirl.create(:micropost, user: user, content: "Dolor sit amet")
+      sign_in user
+      visit root_path
+    end
+    it "should render the user's feed" do
+      user.feed.each do |item|
+        expect(page).to have_selector("li##{item.id}", text: item.content) #первая # обозначает CSS id в Capybara
+      end
+    end
   end
   
 end

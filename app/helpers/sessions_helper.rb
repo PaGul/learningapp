@@ -39,7 +39,12 @@ module SessionsHelper
   def store_location #сохраняет запрашиваемую страницу незарегистрированного пользователя перед перенаправлением на страницу аутотенфикации
     session[:return_to]=request.url if request.get?
   end
-
-
+  
+  def signed_in_user
+    unless signed_in?
+      store_location #запись запроса перед редиректом
+      redirect_to signin_path, notice: "Please sign in" #notice: можно заменить на flash[:notice], почему-то с error и success так делать нельзя
+    end
+  end
 
 end

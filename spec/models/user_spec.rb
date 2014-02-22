@@ -13,6 +13,8 @@ describe User do
   it { should respond_to(:remember_token) }
   it { should respond_to(:authenticate) }
   it { should respond_to(:admin) }
+  it { should respond_to(:microposts) }
+  it { should respond_to(:feed) }
   
   it { should be_valid }
   it { should_not be_admin } # пользователь должен иметь булев метод admin?
@@ -26,17 +28,17 @@ describe User do
   end
   
   describe "test for the empty name" do
-    before {@user.name=" "}
+    before { @user.name=" " }
     it {should_not be_valid}
   end
 
   describe "name shouldn't be very long" do
-    before {@user.name="a" * 56}
-    it {should_not be_valid}
+    before { @user.name="a" * 56 }
+    it { should_not be_valid }
   end
   describe "wrong test email format" do
-    before {@user.email="3@fdsf..com"}
-    it {should_not be_valid}
+    before { @user.email="3@fdsf..com" }
+    it { should_not be_valid }
   end
 
   describe "when email was duplicated" do
@@ -88,7 +90,38 @@ describe User do
     its(:remember_token) { should_not be_blank } 
     #it { expect(@user.remember_token).not_to be_blank }
   end
-
+  
+  describe "micropost associations" do
+    before { @user.save }
+    let!(:older_micropost) do #let вычисляются сразу после обращения, let! вычисляется сразу после объявления
+      FactoryGirl.create(:micropost, user: @user, created_at: 1.day.ago) 
+    end
+    let!(:newer_micropost) do
+      FactoryGirl.create(:micropost, user: @user, created_at: 1.hour.ago)
+    end
+    
+    it "should have right microposts in he right order" do
+      expect(@user.microposts.to_a).to eq [newer_micropost, older_micropost]
+    end
+    
+    it "should destroy associated microposts" do
+      microposts = @user.microposts.to_a
+      @user.destroy
+      expect(microposts).not_to be_empty #при удалении пользователя не должна очиститься переменная micropost
+      microposts.each do |micropost|
+        expect(Micropost.where(id: micropost.id)).to be_empty #если объект не найден obj.find возвращает исключение(to raise_error(ActiveRecord::RecordNotFound)), а obj.where - nil 
+      end
+    end
+    
+    describe "status" do # feed should only have his messages, no unfollowed user posts
+      let(:unfollowed_micropost) { FactoryGirl.create(:micropost, user: FactoryGirl.create(:user)) }
+      
+      its(:feed) { should include(newer_micropost) } # проверяет есть ли newer post в массиве feed
+      its(:feed) { should include(older_micropost) }
+      its(:feed) { should_not include(unfollowed_micropost) }
+    end
+    
+  end
 
 end
 

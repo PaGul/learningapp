@@ -1,5 +1,6 @@
 Learningapp::Application.routes.draw do
   resources :users
+  resources :microposts, only: [:create, :destroy]
   resources :sessions, only: [:new, :destroy, :create]
   root 'static_pages#home'
   match '/help', to: 'static_pages#help', via: 'get'

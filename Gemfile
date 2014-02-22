@@ -27,7 +27,7 @@ group :test do
   gem 'database_cleaner', github: 'bmabey/database_cleaner'
   gem 'factory_girl_rails', '4.2.1'
   # OS X: раскомментируйте эти строки.
-   gem 'growl', '1.0.3'
+  gem 'growl', '1.0.3'
 
   # Linux: раскомментируйте эти строки.
   # gem 'libnotify', '0.8.0'

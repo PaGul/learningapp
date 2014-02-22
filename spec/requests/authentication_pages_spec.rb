@@ -19,6 +19,8 @@ describe "Authentication" do
 
       it { should have_title('Sign in') }
       it { should have_selector('div.alert.alert-error') }
+      it { should_not have_link('Profile') }
+      it { should_not have_link('Settings') }
       
       describe "after visiting another page" do  #проверка отсутствия побочного сообщения
         before { click_link "Home" }
@@ -57,9 +59,7 @@ describe "Authentication" do
       describe "when attempting to visit a protected page" do #заход на страницу редактирования незарегистрированным, потом регистрация и должен быть автоматический переход на станицу редактирования 
         before do
           visit edit_user_path(user)
-          fill_in "Email",    with: user.email
-          fill_in "Password", with: user.password
-          click_button "Sign in"
+          sign_in user
         end
 
         describe "after signing in" do
@@ -67,20 +67,42 @@ describe "Authentication" do
           it "should render the desired protected page" do
             expect(page).to have_title('Edit user')
           end
+          
+          describe "when sign in again" do
+            before do
+              click_link('Sign out') #delete signout_path альтернативный вариант
+              visit signin_path
+              sign_in user
+            end
+            it { should have_title(user.name) }
+          end
         end
-      end
       
-      describe "as non-admin user" do
-        let(:user) { FactoryGirl.create(:user) }
-        let(:non_admin) { FactoryGirl.create(:user) }
-        before { sign_in non_admin, no_capybara: true }
+        describe "as non-admin user" do
+          let(:user) { FactoryGirl.create(:user) }
+          let(:non_admin) { FactoryGirl.create(:user) }
+          before { sign_in non_admin, no_capybara: true }
         
-        describe "submitting a DELETE request to the Users#destroy action" do
-          before { delete user_path(user) } # users/1/delete
-          specify { expect(response).to redirect_to root_path }
+          describe "submitting a DELETE request to the Users#destroy action" do
+            before { delete user_path(user) } # users/1/delete
+            specify { expect(response).to redirect_to root_path }
+          end
         end
       end
 
+      describe "in the Microposts controller" do
+
+        describe "submitting to the create action" do
+         before { post microposts_path }
+         specify { expect(response).to redirect_to signin_path }
+        end
+        
+        describe "submitting to the destroy action" do
+         before { delete micropost_path(FactoryGirl.create(:micropost)) }
+         specify { expect(response).to redirect_to signin_path }
+        end
+        
+      end
       describe "in the Users controller" do
 
         describe "visiting the edit page" do
@@ -99,21 +121,21 @@ describe "Authentication" do
         end
       end
      
-      describe "as wrong user" do
-        let(:user) { FactoryGirl.create(:user) }
-        let(:wrong_user) { FactoryGirl.create(:user, email: "wrongemail@example.com") }
-        before { sign_in user, no_capybara: true }
-       
-        describe "submitting a GET request to the Users#edit action" do
-          before { get edit_user_path(wrong_user) }
-          specify { expect(response.body).not_to match(full_title('Edit user')) }
-          specify { expect(response).to redirect_to(root_url) }
-        end
-       
-        describe "submitting a PATCH request to the Users#update action" do
-          before { patch user_path(wrong_user) }
-          specify { expect(response).to redirect_to(root_url) }
-        end
+    end
+    describe "as wrong user" do
+      let(:user) { FactoryGirl.create(:user) }
+      let(:wrong_user) { FactoryGirl.create(:user, email: "wrongemail@example.com") }
+      before { sign_in user, no_capybara: true }
+     
+      describe "submitting a GET request to the Users#edit action" do
+        before { get edit_user_path(wrong_user) }
+        specify { expect(response.body).not_to match(full_title('Edit user')) }
+        specify { expect(response).to redirect_to(root_url) }
+      end
+     
+      describe "submitting a PATCH request to the Users#update action" do
+        before { patch user_path(wrong_user) }
+        specify { expect(response).to redirect_to(root_url) }
       end
     end
   end

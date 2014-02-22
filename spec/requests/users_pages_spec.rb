@@ -32,7 +32,7 @@ describe "Users" do
     end
     
     describe "delete links" do
-      it { should_not have_link('delete') } # пользователь не может далять пользователей
+      it { should_not have_link('delete') } # пользователь не может удалять пользователей
       
       describe "as an admin user" do
         let(:admin) { FactoryGirl.create(:admin) }
@@ -46,25 +46,47 @@ describe "Users" do
             click_link('delete', match: :first) # match: :first, который говорит Capybara что нам не важно какую именно удаляющую ссылку она (Капибара) кликает; это должен быть просто клик по первой из тех что она видит
           end.to change(User, :count).by(-1)
         end
-        it { should_not have_link('delete', user_path(admin)) }
+        
+        
+        describe "it shouldn't able to delete administrator" do
+          before do
+            visit users_path
+            delete user_path(admin)
+          end
+          it "number of users shouldn't change" do
+            expect { delete user_path(admin) }.to_not change(User, :count).by(-1) #почему-то капибара не делает анализ респонда
+          end
+        end
+        
+        #   it { should_not have_link('delete', href: user_path(admin)) }
       end
     end
   end
   
   describe "Sign up" do
-    before {visit signup_path}
-    it {should have_title(full_title('Sign up'))}
-    it {should have_content('Sign up')}
+    before { visit signup_path }
+    it { should have_title(full_title('Sign up')) }
+    it { should have_content('Sign up') }
   end
   
   describe "profile page" do
   
     #user определен в факторигёрл
-    let(:user) {FactoryGirl.create(:user)}
-    before {visit user_path(user)}
+    let(:user) { FactoryGirl.create(:user) }
+    let!(:m1) { FactoryGirl.create(:micropost, user: user, content: "Foo") }
+    let!(:m2) { FactoryGirl.create(:micropost, user: user, content: "Bar") }
   
-    it {should have_content(user.name)}
-    it {should have_title(user.name)}
+    before { visit user_path(user) }
+  
+    it { should have_content(user.name) }
+    it { should have_title(user.name) }
+    
+    describe "microposts" do
+      it { should have_content(m1.content) }
+      it { should have_content(m2.content) }
+      it { should have_content(user.microposts.count) }
+    end
+    
   end
   
   describe "signup page" do
@@ -93,7 +115,7 @@ describe "Users" do
         click_button submit
       end
     
-      it {should have_content("Name can't be blank")}
+      it { should have_content("Name can't be blank") }
     end
     
     describe "errors of filling the labels" do
@@ -184,6 +206,17 @@ describe "Users" do
       visit edit_user_path(user) 
     end 
     
+    describe "forbidden attributes" do # нельзя стать админом через patch
+      let(:params) do
+        { user: {:password => user.password, :password_confirmation => user.password, :admin => true } }
+      end
+      before do
+        sign_in user, no_capybara: true
+        patch user_path(user), params
+      end
+      specify { expect(user.reload).not_to be_admin }
+    end
+    
     describe "page" do
       it { should have_content("Update your profile") }
       it { should have_title("Edit user") }
@@ -197,7 +230,7 @@ describe "Users" do
         fill_in "Name",             with: new_name
         fill_in "Email",            with: new_email
         fill_in "Password",         with: user.password
-        fill_in "Confirm Password", with: user.password
+        fill_in "Confirmation",     with: user.password
         click_button "Save changes"
       end
       

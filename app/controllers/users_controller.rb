@@ -1,11 +1,16 @@
 class UsersController < ApplicationController
-  before_action :signed_in_user, only: [:edit, :update, :index, :destroy] #список действий доступных только зарегестрированным пользователям
+  before_action :signed_in_user, only: [:edit, :update, :index, :destroy] #список действий доступных только зарегестрированным пользователям. В данной случае при обращении незарег пользователя к данным страницам происходит переадресация на sign_in и после входа переход на предыдушую страницу
   before_action :correct_user, only: [:edit, :update] #эти действия присуще только для одного пользователя (один пользователь не может редактировать другого)
   before_action :admin_user, only: [:destroy] # эсклюзивные действия админа
+  before_action :registered_user, only: [:new, :create]
   def destroy
-    User.find(params[:id]).destroy
-    flash[:delete] = "User successfully deleted"
-    redirect_to users_url # надо почитать чем отличается от users_path
+    unless User.find(params[:id]).admin?
+      User.find(params[:id]).destroy
+      flash[:successdelete] = "User successfully deleted"
+    else 
+      flash[:error] = "Can't delete administrator!"
+    end
+    redirect_to users_url
   end
   
   def index
@@ -14,7 +19,8 @@ class UsersController < ApplicationController
   end
   
   def show
-    @user=User.find(params[:id]) #можно заменить на correct_user так-то
+    @user = User.find(params[:id]) #можно заменить на correct_user так-то я думаю
+    @microposts = @user.microposts.paginate(page: params[:page]) #paginate — он работает даже с ассоциацией микросообщений, залезая в таблицу microposts и вытягивая оттуда нужную страницу микросообщений.
   end
   
   def new
@@ -35,6 +41,7 @@ class UsersController < ApplicationController
   end
   
   def create
+    
     @user=User.new(user_params)
     if @user.save
       sign_in @user
@@ -52,12 +59,6 @@ class UsersController < ApplicationController
     :password_confirmation) #ограничивает параметры на передачу, чтобы запретить например передачу админского поля
   end
     
-  def signed_in_user
-    unless signed_in?
-      store_location #запись запроса перед редиректом
-      redirect_to signin_path, notice: "Please sign in" #notice: можно заменить на flash[:notice], почему-то с error и success так делать нельзя
-    end
-  end
     
   def correct_user
     @user=User.find(params[:id])
@@ -66,5 +67,9 @@ class UsersController < ApplicationController
     
   def admin_user
     redirect_to root_path unless current_user.admin? # метод admin? добавился автоматически после соотвествующей миграции
+  end
+  
+  def registered_user
+    redirect_to root_path unless current_user.nil?
   end
 end
