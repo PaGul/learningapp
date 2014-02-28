@@ -1,7 +1,18 @@
 Learningapp::Application.routes.draw do
-  resources :users
+  resources :users do
+    member do
+      get :following, :followers 
+      #создаёт  /users/1/following и /users/1/followers 
+      # GET	/users/1/following	following	following_user_path(1) 
+      # GET	/users/1/followers	followers	followers_user_path(1)
+      # если вместо member написать collection, то будет обращение к users/following
+      
+      
+    end
+  end
   resources :microposts, only: [:create, :destroy]
   resources :sessions, only: [:new, :destroy, :create]
+  resources :relationships, only: [:create, :destroy]
   root 'static_pages#home'
   match '/help', to: 'static_pages#help', via: 'get'
   match 'about', to: 'static_pages#about', via: 'get'

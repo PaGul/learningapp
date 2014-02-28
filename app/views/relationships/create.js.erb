@@ -1,0 +1,5 @@
+//jQuery-helpers
+//код внутри тэга с id="follow_form" замениться на код партиала unfollow. 
+//Здесь используется функция escape_javascript, которая необходима для маскирования результатов при вставке HTML в файл JavaScript.
+$("#follow_form").html("<%= escape_javascript(render('users/unfollow')) %>")
+$("#followers").html('<%= @user.followers.count %>')

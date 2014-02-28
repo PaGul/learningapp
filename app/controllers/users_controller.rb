@@ -1,5 +1,5 @@
 class UsersController < ApplicationController
-  before_action :signed_in_user, only: [:edit, :update, :index, :destroy] #список действий доступных только зарегестрированным пользователям. В данной случае при обращении незарег пользователя к данным страницам происходит переадресация на sign_in и после входа переход на предыдушую страницу
+  before_action :signed_in_user, only: [:edit, :update, :index, :destroy, :following, :followers] #список действий доступных только зарегестрированным пользователям. В данной случае при обращении незарег пользователя к данным страницам происходит переадресация на sign_in и после входа переход на предыдушую страницу
   before_action :correct_user, only: [:edit, :update] #эти действия присуще только для одного пользователя (один пользователь не может редактировать другого)
   before_action :admin_user, only: [:destroy] # эсклюзивные действия админа
   before_action :registered_user, only: [:new, :create]
@@ -50,6 +50,20 @@ class UsersController < ApplicationController
     else 
       render 'new'
     end
+  end
+  
+  def following
+    @title = "Following"
+    @user = User.find(params[:id])
+    @users = @user.followed_users.paginate(page: params[:page])
+    render 'show_follow'
+  end
+  
+  def followers
+    @title = "Followers"
+    @user = User.find(params[:id])
+    @users = @user.followers.paginate(page: params[:page])
+    render 'show_follow'
   end
   
   private

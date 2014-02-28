@@ -93,13 +93,13 @@ describe "Authentication" do
       describe "in the Microposts controller" do
 
         describe "submitting to the create action" do
-         before { post microposts_path }
-         specify { expect(response).to redirect_to signin_path }
+          before { post microposts_path }
+          specify { expect(response).to redirect_to signin_path }
         end
         
         describe "submitting to the destroy action" do
-         before { delete micropost_path(FactoryGirl.create(:micropost)) }
-         specify { expect(response).to redirect_to signin_path }
+          before { delete micropost_path(FactoryGirl.create(:micropost)) }
+          specify { expect(response).to redirect_to signin_path }
         end
         
       end
@@ -118,6 +118,28 @@ describe "Authentication" do
         describe "visiting the user index" do        
           before { visit users_path } #страница всех пользователей недоступна гостям
           it { should have_title("Sign in")}
+        end
+        
+        describe "visiting the following page" do
+          before { visit following_user_path(user) }
+          it { should have_title('Sign in') }
+        end
+        
+        describe "visiting ther followers page" do
+          before { visit followers_user_path(user) }
+          it { should have_title('Sign in') }
+        end
+      end
+      
+      describe "in the Relationships controller" do
+        describe "submitting to create action" do
+          before { post relationships_path }
+          specify { expect(response).to redirect_to(signin_path) }
+        end
+        
+        describe "submitting to the destroy action" do
+          before { delete relationship_path(1) } # обращаюсь к relation с id=1, даже не создавая его объекта
+          specify { expect(response).to redirect_to(signin_path) }
         end
       end
      
